@@ -9,6 +9,9 @@ import type { Me, AgentCard } from "@/lib/api";
 import { clearAuthToken } from "@/lib/auth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 
+const cardClass =
+  "rounded-[var(--radius-card)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] shadow-[var(--shadow-card)]";
+
 export default function DashboardPage() {
   useRequireAuth();
   const router = useRouter();
@@ -59,7 +62,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <PageShell title="Dashboard" description="Loading your agent cards…">
-        <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm text-sm text-slate-400">
+        <div className={`${cardClass} p-6 text-sm text-[color:var(--color-fg-weak)]`}>
           Loading…
         </div>
       </PageShell>
@@ -69,12 +72,17 @@ export default function DashboardPage() {
   if (error || !me) {
     return (
       <PageShell title="Dashboard" description="">
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+        <div className="rounded-[var(--radius-card)] border border-[color:var(--color-danger-soft)] bg-[color:var(--color-danger-soft)] p-4 text-[color:var(--color-danger)]">
           {error ?? "Something went wrong."}
         </div>
       </PageShell>
     );
   }
+
+  const isDomain = me.identity_type === "domain";
+  const identityPillClass = isDomain
+    ? "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary-deep)]"
+    : "bg-[color:var(--color-accent-soft)] text-[color:var(--color-accent)]";
 
   return (
     <PageShell
@@ -83,22 +91,22 @@ export default function DashboardPage() {
     >
       <div className="space-y-6">
         {/* Profile card */}
-        <div className="flex items-center justify-between rounded-3xl border border-black/10 bg-white p-5 shadow-sm">
+        <div className={`${cardClass} flex items-center justify-between p-5`}>
           <div>
-            <p className="font-semibold text-slate-950">{me.display_name ?? me.email}</p>
-            <p className="text-sm text-slate-500">{me.email}</p>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="rounded-full border border-black/10 bg-slate-50 px-2.5 py-0.5 font-mono text-xs text-slate-500">
+            <p className="font-semibold text-[color:var(--color-fg-strong)]">{me.display_name ?? me.email}</p>
+            <p className="text-sm text-[color:var(--color-fg-muted)]">{me.email}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[color:var(--color-surface-2)] px-2.5 py-0.5 font-mono text-xs text-[color:var(--color-fg-muted)]">
                 @{me.handle}
               </span>
-              <span className="rounded-full border border-black/10 bg-slate-50 px-2.5 py-0.5 font-mono text-xs text-slate-500">
-                {me.identity_type === "domain" ? `domain: ${me.domain}` : "personal"}
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide ${identityPillClass}`}>
+                {isDomain ? `Business · ${me.domain}` : "Personal"}
               </span>
             </div>
           </div>
           <button
             onClick={signOut}
-            className="rounded-2xl border border-black/10 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="inline-flex h-9 items-center rounded-[var(--radius-control)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 text-sm font-medium text-[color:var(--color-fg-default)] hover:bg-[color:var(--color-surface-2)]"
           >
             Sign out
           </button>
@@ -107,26 +115,28 @@ export default function DashboardPage() {
         {/* Agent cards */}
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-fg-weak)]">
               Agent Cards
             </h2>
             <Link
               href="/dashboard/cards/new"
-              className="rounded-full border border-black/10 bg-white px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex h-9 items-center rounded-[var(--radius-control)] bg-[color:var(--color-primary)] px-4 text-sm font-medium text-white transition hover:bg-[color:var(--color-primary-hover)]"
             >
               + New card
             </Link>
           </div>
 
           {cards.length === 0 ? (
-            <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-sm text-center">
-              <p className="text-sm text-slate-400">
-                You have no agent cards yet.{" "}
-                <Link href="/dashboard/cards/new" className="text-slate-700 underline hover:text-slate-950">
-                  Create your first card
-                </Link>
-                .
+            <div className={`${cardClass} p-8 text-center`}>
+              <p className="text-sm text-[color:var(--color-fg-muted)]">
+                You have no agent cards yet.
               </p>
+              <Link
+                href="/dashboard/cards/new"
+                className="mt-4 inline-flex h-10 items-center rounded-[var(--radius-control)] bg-[color:var(--color-primary)] px-5 text-sm font-medium text-white transition hover:bg-[color:var(--color-primary-hover)]"
+              >
+                Create your first card
+              </Link>
             </div>
           ) : (
             <div className="space-y-3">
@@ -138,41 +148,42 @@ export default function DashboardPage() {
                   me.handle
                 );
 
+                const statusClass =
+                  card.status === "active"
+                    ? "bg-[color:var(--color-accent-soft)] text-[color:var(--color-accent)]"
+                    : "bg-[color:var(--color-surface-2)] text-[color:var(--color-fg-weak)]";
+
                 return (
                   <div
                     key={card.id}
-                    className="rounded-3xl border border-black/10 bg-white p-5 shadow-sm"
+                    className={`${cardClass} p-5 transition hover:border-[color:var(--color-border-strong)] hover:shadow-[var(--shadow-card-hover)]`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-slate-950">{card.display_name}</p>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] ${
-                            card.status === "active"
-                              ? "border border-emerald-200 bg-emerald-50 text-emerald-600"
-                              : "border border-slate-200 bg-slate-50 text-slate-500"
-                          }`}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-[color:var(--color-fg-strong)]">{card.display_name}</p>
+                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${statusClass}`}>
                             {card.status}
                           </span>
                           {!card.is_public && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-amber-600">
+                            <span className="rounded-full bg-[color:var(--color-warning-soft)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--color-warning)]">
                               Private
                             </span>
                           )}
                         </div>
-                        <p className="font-mono text-xs text-slate-400">/{card.slug}</p>
+                        <p className="mt-1 font-mono text-xs text-[color:var(--color-fg-weak)]">/{card.slug}</p>
                         {card.description && (
-                          <p className="mt-1 text-sm text-slate-500 line-clamp-1">{card.description}</p>
+                          <p className="mt-1 text-sm text-[color:var(--color-fg-muted)] line-clamp-1">{card.description}</p>
                         )}
 
                         {/* Public URL */}
                         <div className="mt-3 flex items-center gap-2">
-                          <code className="min-w-0 flex-1 truncate rounded-lg border border-black/5 bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-600">
+                          <code className="min-w-0 flex-1 truncate rounded-[var(--radius-control)] border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)] px-3 py-1.5 font-mono text-xs text-[color:var(--color-fg-muted)]">
                             {publicUrl}
                           </code>
                           <button
                             onClick={() => copyUrl(publicUrl, card.id)}
-                            className="shrink-0 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+                            className="shrink-0 rounded-[var(--radius-control)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1.5 text-xs text-[color:var(--color-fg-default)] hover:bg-[color:var(--color-surface-2)]"
                           >
                             {copiedId === card.id ? "Copied!" : "Copy"}
                           </button>
@@ -181,7 +192,7 @@ export default function DashboardPage() {
 
                       <Link
                         href={`/dashboard/cards/${card.id}`}
-                        className="shrink-0 rounded-xl border border-black/10 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                        className="shrink-0 rounded-[var(--radius-control)] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1.5 text-sm text-[color:var(--color-fg-default)] hover:bg-[color:var(--color-surface-2)]"
                       >
                         Edit
                       </Link>
